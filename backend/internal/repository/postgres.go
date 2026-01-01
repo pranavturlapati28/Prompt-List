@@ -110,6 +110,68 @@ func (r *PromptRepository) PromptExists(id int) (bool, error) {
 	return exists, nil
 }
 
+// UpdatePrompt updates an existing prompt
+func (r *PromptRepository) UpdatePrompt(id int, title, description string) (*models.Prompt, error) {
+	// Build dynamic UPDATE query based on provided fields
+	query := "UPDATE prompts SET"
+	var args []interface{}
+	argPos := 1
+
+	if title != "" {
+		query += fmt.Sprintf(" title = $%d", argPos)
+		args = append(args, title)
+		argPos++
+	}
+
+	if description != "" {
+		if len(args) > 0 {
+			query += ","
+		}
+		query += fmt.Sprintf(" description = $%d", argPos)
+		args = append(args, description)
+		argPos++
+	}
+
+	if len(args) == 0 {
+		// No fields to update, just return the existing prompt
+		return r.GetPromptByID(id)
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d RETURNING id, title, description, project_name", argPos)
+	args = append(args, id)
+
+	var p models.Prompt
+	err := database.DB.QueryRow(query, args...).Scan(&p.ID, &p.Title, &p.Description, &p.ProjectName)
+	if err == sql.ErrNoRows {
+		return nil, nil // Not found
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update failed: %w", err)
+	}
+
+	return &p, nil
+}
+
+// DeletePrompt deletes a prompt by ID (cascade will delete related nodes and notes)
+func (r *PromptRepository) DeletePrompt(id int) error {
+	query := "DELETE FROM prompts WHERE id = $1"
+	result, err := database.DB.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("delete failed: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Not found
+	}
+
+	return nil
+}
+
 // =============================================================================
 // NODE OPERATIONS
 // =============================================================================
@@ -166,6 +228,89 @@ func (r *PromptRepository) CreateNode(promptID int, name, action string) (*model
 		Name:     name,
 		Action:   action,
 	}, nil
+}
+
+// GetNodeByID retrieves a single node by its ID
+func (r *PromptRepository) GetNodeByID(nodeID int) (*models.Node, error) {
+	query := `
+		SELECT id, prompt_id, name, action 
+		FROM nodes 
+		WHERE id = $1
+	`
+
+	var n models.Node
+	err := database.DB.QueryRow(query, nodeID).Scan(&n.ID, &n.PromptID, &n.Name, &n.Action)
+
+	if err == sql.ErrNoRows {
+		return nil, nil // Not found (not an error)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+
+	return &n, nil
+}
+
+// UpdateNode updates an existing node
+func (r *PromptRepository) UpdateNode(nodeID int, name, action string) (*models.Node, error) {
+	// Build dynamic UPDATE query based on provided fields
+	query := "UPDATE nodes SET"
+	var args []interface{}
+	argPos := 1
+
+	if name != "" {
+		query += fmt.Sprintf(" name = $%d", argPos)
+		args = append(args, name)
+		argPos++
+	}
+
+	if action != "" {
+		if len(args) > 0 {
+			query += ","
+		}
+		query += fmt.Sprintf(" action = $%d", argPos)
+		args = append(args, action)
+		argPos++
+	}
+
+	if len(args) == 0 {
+		// No fields to update, just return the existing node
+		return r.GetNodeByID(nodeID)
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d RETURNING id, prompt_id, name, action", argPos)
+	args = append(args, nodeID)
+
+	var n models.Node
+	err := database.DB.QueryRow(query, args...).Scan(&n.ID, &n.PromptID, &n.Name, &n.Action)
+	if err == sql.ErrNoRows {
+		return nil, nil // Not found
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update failed: %w", err)
+	}
+
+	return &n, nil
+}
+
+// DeleteNode deletes a node by ID
+func (r *PromptRepository) DeleteNode(nodeID int) error {
+	query := "DELETE FROM nodes WHERE id = $1"
+	result, err := database.DB.Exec(query, nodeID)
+	if err != nil {
+		return fmt.Errorf("delete failed: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Not found
+	}
+
+	return nil
 }
 
 // =============================================================================
@@ -225,4 +370,66 @@ func (r *PromptRepository) CreateNote(promptID int, content string) (*models.Not
 		Content:   content,
 		CreatedAt: createdAt,
 	}, nil
+}
+
+// GetNoteByID retrieves a single note by its ID
+func (r *PromptRepository) GetNoteByID(noteID int) (*models.Note, error) {
+	query := `
+		SELECT id, prompt_id, content, created_at 
+		FROM notes 
+		WHERE id = $1
+	`
+
+	var n models.Note
+	err := database.DB.QueryRow(query, noteID).Scan(&n.ID, &n.PromptID, &n.Content, &n.CreatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, nil // Not found (not an error)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+
+	return &n, nil
+}
+
+// UpdateNote updates an existing note
+func (r *PromptRepository) UpdateNote(noteID int, content string) (*models.Note, error) {
+	query := `
+		UPDATE notes 
+		SET content = $1 
+		WHERE id = $2 
+		RETURNING id, prompt_id, content, created_at
+	`
+
+	var n models.Note
+	err := database.DB.QueryRow(query, content, noteID).Scan(&n.ID, &n.PromptID, &n.Content, &n.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil // Not found
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update failed: %w", err)
+	}
+
+	return &n, nil
+}
+
+// DeleteNote deletes a note by ID
+func (r *PromptRepository) DeleteNote(noteID int) error {
+	query := "DELETE FROM notes WHERE id = $1"
+	result, err := database.DB.Exec(query, noteID)
+	if err != nil {
+		return fmt.Errorf("delete failed: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Not found
+	}
+
+	return nil
 }

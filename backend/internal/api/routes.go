@@ -90,4 +90,64 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		Tags:          []string{"Notes"},
 		DefaultStatus: 201,
 	}, handler.CreateNote)
+
+	// Update prompt
+	huma.Register(api, huma.Operation{
+		OperationID: "updatePrompt",
+		Method:      "PUT",
+		Path:        "/prompts/{id}",
+		Summary:     "Update Prompt",
+		Description: "Updates an existing prompt by its ID",
+		Tags:        []string{"Prompts"},
+	}, handler.UpdatePrompt)
+
+	// Delete prompt
+	huma.Register(api, huma.Operation{
+		OperationID: "deletePrompt",
+		Method:      "DELETE",
+		Path:        "/prompts/{id}",
+		Summary:     "Delete Prompt",
+		Description: "Deletes a prompt by its ID. This will cascade delete all associated nodes and notes.",
+		Tags:        []string{"Prompts"},
+	}, handler.DeletePrompt)
+
+	// Update node
+	huma.Register(api, huma.Operation{
+		OperationID: "updateNode",
+		Method:      "PUT",
+		Path:        "/prompts/{id}/nodes/{nodeId}",
+		Summary:     "Update Node",
+		Description: "Updates an existing node (subprompt) by its ID",
+		Tags:        []string{"Nodes"},
+	}, handler.UpdateNode)
+
+	// Delete node
+	huma.Register(api, huma.Operation{
+		OperationID: "deleteNode",
+		Method:      "DELETE",
+		Path:        "/prompts/{id}/nodes/{nodeId}",
+		Summary:     "Delete Node",
+		Description: "Deletes a node (subprompt) by its ID",
+		Tags:        []string{"Nodes"},
+	}, handler.DeleteNode)
+
+	// Update note
+	huma.Register(api, huma.Operation{
+		OperationID: "updateNote",
+		Method:      "PUT",
+		Path:        "/prompts/{id}/notes/{noteId}",
+		Summary:     "Update Note",
+		Description: "Updates an existing note by its ID",
+		Tags:        []string{"Notes"},
+	}, handler.UpdateNote)
+
+	// Delete note
+	huma.Register(api, huma.Operation{
+		OperationID: "deleteNote",
+		Method:      "DELETE",
+		Path:        "/prompts/{id}/notes/{noteId}",
+		Summary:     "Delete Note",
+		Description: "Deletes a note by its ID",
+		Tags:        []string{"Notes"},
+	}, handler.DeleteNote)
 }

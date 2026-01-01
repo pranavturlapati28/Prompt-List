@@ -1,0 +1,71 @@
+/* =============================================================================
+   ADD NOTE COMPONENT
+   Styles for the note input form
+   ============================================================================= */
+
+   .add-note-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .add-note-form textarea {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color var(--transition-normal), 
+                box-shadow var(--transition-normal);
+  }
+  
+  .add-note-form textarea:focus {
+    outline: none;
+    border-color: var(--color-indigo);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+  
+  .add-note-form textarea::placeholder {
+    color: var(--text-muted);
+  }
+  
+  .add-note-form textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .add-note-form button {
+    background: linear-gradient(135deg, var(--color-indigo), var(--color-violet));
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    align-self: flex-end;
+    transition: transform var(--transition-normal), 
+                box-shadow var(--transition-normal),
+                opacity var(--transition-normal);
+  }
+  
+  .add-note-form button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+  
+  .add-note-form button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .form-error {
+    color: var(--color-red);
+    font-size: 12px;
+  }

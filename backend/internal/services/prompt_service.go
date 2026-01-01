@@ -10,6 +10,8 @@ import (
 // Common errors that can be returned by the service
 var (
 	ErrPromptNotFound = errors.New("prompt not found")
+	ErrNodeNotFound   = errors.New("node not found")
+	ErrNoteNotFound   = errors.New("note not found")
 )
 
 // PromptService contains all business logic for prompts
@@ -75,8 +77,8 @@ func (s *PromptService) GetTree() (*models.TreeResponse, error) {
 	}
 
 	return &models.TreeResponse{
-		Project:     "3D Racing Game",
-		MainRequest: "Build a 3D racing video game in React Three Fiber where the player drives against AI opponents on a pregenerated racing track.",
+		Project:     "Personal Finance Copilot",
+		MainRequest: "Build a web app that helps users track spending, set goals, and get AI-powered budgeting advice from categorized transactions.",
 		Prompts:     promptNodes,
 	}, nil
 }
@@ -106,6 +108,34 @@ func (s *PromptService) GetPrompt(id int) (*models.PromptDetail, error) {
 // CreatePrompt creates a new prompt
 func (s *PromptService) CreatePrompt(title, description string) (*models.Prompt, error) {
 	return s.repo.CreatePrompt(title, description)
+}
+
+// UpdatePrompt updates an existing prompt
+func (s *PromptService) UpdatePrompt(id int, title, description string) (*models.Prompt, error) {
+	// Check if prompt exists
+	exists, err := s.repo.PromptExists(id)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, ErrPromptNotFound
+	}
+
+	return s.repo.UpdatePrompt(id, title, description)
+}
+
+// DeletePrompt deletes a prompt by ID
+func (s *PromptService) DeletePrompt(id int) error {
+	// Check if prompt exists
+	exists, err := s.repo.PromptExists(id)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrPromptNotFound
+	}
+
+	return s.repo.DeletePrompt(id)
 }
 
 // =============================================================================
@@ -150,6 +180,34 @@ func (s *PromptService) CreateNode(promptID int, name, action string) (*models.N
 	return s.repo.CreateNode(promptID, name, action)
 }
 
+// UpdateNode updates an existing node
+func (s *PromptService) UpdateNode(nodeID int, name, action string) (*models.Node, error) {
+	// Check if node exists
+	node, err := s.repo.GetNodeByID(nodeID)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, ErrNodeNotFound
+	}
+
+	return s.repo.UpdateNode(nodeID, name, action)
+}
+
+// DeleteNode deletes a node by ID
+func (s *PromptService) DeleteNode(nodeID int) error {
+	// Check if node exists
+	node, err := s.repo.GetNodeByID(nodeID)
+	if err != nil {
+		return err
+	}
+	if node == nil {
+		return ErrNodeNotFound
+	}
+
+	return s.repo.DeleteNode(nodeID)
+}
+
 // =============================================================================
 // NOTE OPERATIONS
 // =============================================================================
@@ -190,4 +248,32 @@ func (s *PromptService) CreateNote(promptID int, content string) (*models.Note, 
 	}
 
 	return s.repo.CreateNote(promptID, content)
+}
+
+// UpdateNote updates an existing note
+func (s *PromptService) UpdateNote(noteID int, content string) (*models.Note, error) {
+	// Check if note exists
+	note, err := s.repo.GetNoteByID(noteID)
+	if err != nil {
+		return nil, err
+	}
+	if note == nil {
+		return nil, ErrNoteNotFound
+	}
+
+	return s.repo.UpdateNote(noteID, content)
+}
+
+// DeleteNote deletes a note by ID
+func (s *PromptService) DeleteNote(noteID int) error {
+	// Check if note exists
+	note, err := s.repo.GetNoteByID(noteID)
+	if err != nil {
+		return err
+	}
+	if note == nil {
+		return ErrNoteNotFound
+	}
+
+	return s.repo.DeleteNote(noteID)
 }

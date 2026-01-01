@@ -88,3 +88,20 @@ type CreateNodeRequest struct {
 type CreateNoteRequest struct {
 	Content string `json:"content" minLength:"1" doc:"Note content (required)"`
 }
+
+// UpdatePromptRequest is the body for PUT /prompts/:id
+type UpdatePromptRequest struct {
+	Title       string `json:"title,omitempty" doc:"Title of the prompt"`
+	Description string `json:"description,omitempty" doc:"Description of the prompt"`
+}
+
+// UpdateNodeRequest is the body for PUT /prompts/:id/nodes/:nodeId
+type UpdateNodeRequest struct {
+	Name   string `json:"name,omitempty" doc:"Name of the node"`
+	Action string `json:"action,omitempty" doc:"Action description"`
+}
+
+// UpdateNoteRequest is the body for PUT /prompts/:id/notes/:noteId
+type UpdateNoteRequest struct {
+	Content string `json:"content" minLength:"1" doc:"Note content (required)"`
+}

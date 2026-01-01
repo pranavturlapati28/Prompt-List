@@ -1,0 +1,170 @@
+/* =============================================================================
+   APP LAYOUT
+   Main application layout with header and content area
+   ============================================================================= */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   Header
+   ----------------------------------------------------------------------------- */
+
+.header {
+  background: var(--bg-primary);
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-content {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 800px;
+}
+
+/* -----------------------------------------------------------------------------
+   Main Content Area
+   ----------------------------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex: 1;
+  padding: var(--spacing-xl);
+  gap: var(--spacing-xl);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tree-container {
+  flex: 1;
+  min-width: 0; /* Allow shrinking */
+}
+
+.panel-container {
+  width: 420px;
+  min-width: 380px;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   Loading State
+   ----------------------------------------------------------------------------- */
+
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: var(--spacing-md);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--color-indigo);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-screen p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* -----------------------------------------------------------------------------
+   Error State
+   ----------------------------------------------------------------------------- */
+
+.error-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.error-screen h2 {
+  color: var(--color-red);
+  font-size: 24px;
+}
+
+.error-screen p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  max-width: 400px;
+}
+
+.error-screen button {
+  background: linear-gradient(135deg, var(--color-indigo), var(--color-violet));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: var(--spacing-sm);
+  transition: opacity var(--transition-normal);
+}
+
+.error-screen button:hover {
+  opacity: 0.9;
+}
+
+/* -----------------------------------------------------------------------------
+   Responsive Design
+   ----------------------------------------------------------------------------- */
+
+@media (max-width: 1200px) {
+  .main {
+    flex-direction: column;
+  }
+
+  .tree-container {
+    min-width: 100%;
+  }
+
+  .panel-container {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: var(--spacing-md);
+  }
+
+  .header {
+    padding: var(--spacing-lg);
+  }
+}

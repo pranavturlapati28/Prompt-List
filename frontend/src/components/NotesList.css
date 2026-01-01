@@ -1,0 +1,51 @@
+/* =============================================================================
+   NOTES LIST COMPONENT
+   Styles for displaying user annotations
+   ============================================================================= */
+
+   .notes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .note-item {
+    background: linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.1),
+      rgba(139, 92, 246, 0.05)
+    );
+    border-left: 3px solid var(--color-indigo);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    transition: transform var(--transition-normal);
+  }
+  
+  .note-item:hover {
+    transform: translateX(4px);
+  }
+  
+  .note-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .note-content {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin: 0 0 var(--spacing-sm) 0;
+    white-space: pre-wrap; /* Preserve line breaks */
+  }
+  
+  .note-date {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  
+  .no-notes {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--spacing-sm) 0;
+  }

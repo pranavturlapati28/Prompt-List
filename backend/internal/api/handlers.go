@@ -89,6 +89,47 @@ type CreateNoteOutput struct {
 	Body models.Note
 }
 
+// --- Update/Delete Input/Output Types ---
+
+type UpdatePromptInput struct {
+	ID   int `path:"id" minimum:"1" doc:"Prompt ID"`
+	Body models.UpdatePromptRequest
+}
+
+type UpdatePromptOutput struct {
+	Body models.Prompt
+}
+
+type NodePathParams struct {
+	ID     int `path:"id" minimum:"1" doc:"Prompt ID"`
+	NodeID int `path:"nodeId" minimum:"1" doc:"Node ID"`
+}
+
+type UpdateNodeInput struct {
+	ID     int `path:"id" minimum:"1" doc:"Prompt ID"`
+	NodeID int `path:"nodeId" minimum:"1" doc:"Node ID"`
+	Body   models.UpdateNodeRequest
+}
+
+type UpdateNodeOutput struct {
+	Body models.Node
+}
+
+type NotePathParams struct {
+	ID     int `path:"id" minimum:"1" doc:"Prompt ID"`
+	NoteID int `path:"noteId" minimum:"1" doc:"Note ID"`
+}
+
+type UpdateNoteInput struct {
+	ID     int `path:"id" minimum:"1" doc:"Prompt ID"`
+	NoteID int `path:"noteId" minimum:"1" doc:"Note ID"`
+	Body   models.UpdateNoteRequest
+}
+
+type UpdateNoteOutput struct {
+	Body models.Note
+}
+
 // =============================================================================
 // HANDLERS
 // Each handler is a thin wrapper that:
@@ -191,4 +232,88 @@ func (h *Handler) CreateNote(ctx context.Context, input *CreateNoteInput) (*Crea
 	}
 
 	return &CreateNoteOutput{Body: *note}, nil
+}
+
+// UpdatePrompt updates an existing prompt
+func (h *Handler) UpdatePrompt(ctx context.Context, input *UpdatePromptInput) (*UpdatePromptOutput, error) {
+	prompt, err := h.service.UpdatePrompt(input.ID, input.Body.Title, input.Body.Description)
+
+	if errors.Is(err, services.ErrPromptNotFound) {
+		return nil, huma.Error404NotFound("Prompt not found")
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to update prompt", err)
+	}
+
+	return &UpdatePromptOutput{Body: *prompt}, nil
+}
+
+// DeletePrompt deletes a prompt by ID
+func (h *Handler) DeletePrompt(ctx context.Context, input *PromptPathParams) (*struct{}, error) {
+	err := h.service.DeletePrompt(input.ID)
+
+	if errors.Is(err, services.ErrPromptNotFound) {
+		return nil, huma.Error404NotFound("Prompt not found")
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to delete prompt", err)
+	}
+
+	return &struct{}{}, nil
+}
+
+// UpdateNode updates an existing node
+func (h *Handler) UpdateNode(ctx context.Context, input *UpdateNodeInput) (*UpdateNodeOutput, error) {
+	node, err := h.service.UpdateNode(input.NodeID, input.Body.Name, input.Body.Action)
+
+	if errors.Is(err, services.ErrNodeNotFound) {
+		return nil, huma.Error404NotFound("Node not found")
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to update node", err)
+	}
+
+	return &UpdateNodeOutput{Body: *node}, nil
+}
+
+// DeleteNode deletes a node by ID
+func (h *Handler) DeleteNode(ctx context.Context, input *NodePathParams) (*struct{}, error) {
+	err := h.service.DeleteNode(input.NodeID)
+
+	if errors.Is(err, services.ErrNodeNotFound) {
+		return nil, huma.Error404NotFound("Node not found")
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to delete node", err)
+	}
+
+	return &struct{}{}, nil
+}
+
+// UpdateNote updates an existing note
+func (h *Handler) UpdateNote(ctx context.Context, input *UpdateNoteInput) (*UpdateNoteOutput, error) {
+	note, err := h.service.UpdateNote(input.NoteID, input.Body.Content)
+
+	if errors.Is(err, services.ErrNoteNotFound) {
+		return nil, huma.Error404NotFound("Note not found")
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to update note", err)
+	}
+
+	return &UpdateNoteOutput{Body: *note}, nil
+}
+
+// DeleteNote deletes a note by ID
+func (h *Handler) DeleteNote(ctx context.Context, input *NotePathParams) (*struct{}, error) {
+	err := h.service.DeleteNote(input.NoteID)
+
+	if errors.Is(err, services.ErrNoteNotFound) {
+		return nil, huma.Error404NotFound("Note not found")
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to delete note", err)
+	}
+
+	return &struct{}{}, nil
 }
