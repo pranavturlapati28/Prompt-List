@@ -1,0 +1,27 @@
+.tree-manager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tree-manager-button {
+  padding: 6px 12px;
+  background: var(--bg-secondary, #2a2a2a);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  color: var(--text-primary, #fff);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tree-manager-button:hover {
+  background: var(--bg-tertiary, #3a3a3a);
+  border-color: var(--color-indigo, #6366f1);
+}
+
+.tree-manager-button:active {
+  transform: scale(0.98);
+}
+

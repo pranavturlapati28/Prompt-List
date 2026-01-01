@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import TreeView from './components/TreeView';
 import SidePanel from './components/SidePanel';
+import TreeManager from './components/TreeManager';
 import { getTree } from './api/api';
 import './App.css';
 
@@ -81,6 +82,7 @@ function App() {
           <div className="header-left">
             <h1>{tree?.project || 'Prompt Tree Explorer'}</h1>
             <p>{tree?.mainRequest}</p>
+            <TreeManager treeData={tree} onTreeUpdate={fetchTree} />
           </div>
           <div className="header-right">
             <div className="instructions">

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -313,6 +314,134 @@ func (h *Handler) DeleteNote(ctx context.Context, input *NotePathParams) (*struc
 	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to delete note", err)
+	}
+
+	return &struct{}{}, nil
+}
+
+// =============================================================================
+// TREE IMPORT/EXPORT/SAVE/LOAD HANDLERS
+// =============================================================================
+
+// ImportTreeInput is the input for POST /tree/import
+type ImportTreeInput struct {
+	Body models.ImportTreeRequest
+}
+
+// ImportTreeOutput indicates success
+type ImportTreeOutput struct {
+	Body struct {
+		Message string `json:"message" example:"Tree imported successfully"`
+	}
+}
+
+// ExportTreeOutput returns the current tree as JSON
+type ExportTreeOutput struct {
+	Body models.TreeResponse
+}
+
+// SaveTreeInput is the input for POST /tree/save
+type SaveTreeInput struct {
+	Body models.SaveTreeRequest
+}
+
+// SaveTreeOutput indicates success
+type SaveTreeOutput struct {
+	Body struct {
+		Message string `json:"message" example:"Tree saved successfully"`
+	}
+}
+
+// SavedTreeListOutput returns list of saved trees
+type SavedTreeListOutput struct {
+	Body models.SavedTreeListResponse
+}
+
+// LoadTreePathParams is the path params for POST /tree/load/{name}
+type LoadTreePathParams struct {
+	Name string `path:"name" doc:"Name of the saved tree"`
+}
+
+// LoadTreeOutput indicates success
+type LoadTreeOutput struct {
+	Body struct {
+		Message string `json:"message" example:"Tree loaded successfully"`
+	}
+}
+
+// DeleteSavedTreePathParams is the path params for DELETE /tree/saves/{name}
+type DeleteSavedTreePathParams struct {
+	Name string `path:"name" doc:"Name of the saved tree"`
+}
+
+// ImportTree imports a tree from JSON and replaces the current tree
+func (h *Handler) ImportTree(ctx context.Context, input *ImportTreeInput) (*ImportTreeOutput, error) {
+	err := h.service.ImportTree(&input.Body.Tree)
+	if err != nil {
+		return nil, huma.Error400BadRequest("Failed to import tree", err)
+	}
+
+	resp := &ImportTreeOutput{}
+	resp.Body.Message = "Tree imported successfully"
+	return resp, nil
+}
+
+// ExportTree returns the current tree as JSON
+func (h *Handler) ExportTree(ctx context.Context, input *struct{}) (*ExportTreeOutput, error) {
+	tree, err := h.service.GetTree()
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to export tree", err)
+	}
+	return &ExportTreeOutput{Body: *tree}, nil
+}
+
+// SaveTree saves the current tree with a name
+func (h *Handler) SaveTree(ctx context.Context, input *SaveTreeInput) (*SaveTreeOutput, error) {
+	err := h.service.SaveTree(input.Body.Name)
+	if err != nil {
+		return nil, huma.Error400BadRequest("Failed to save tree", err)
+	}
+
+	resp := &SaveTreeOutput{}
+	resp.Body.Message = "Tree saved successfully"
+	return resp, nil
+}
+
+// ListSavedTrees returns all saved tree names
+func (h *Handler) ListSavedTrees(ctx context.Context, input *struct{}) (*SavedTreeListOutput, error) {
+	trees, err := h.service.ListSavedTrees()
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to list saved trees", err)
+	}
+
+	return &SavedTreeListOutput{
+		Body: models.SavedTreeListResponse{Trees: trees},
+	}, nil
+}
+
+// LoadTree loads a saved tree and replaces the current tree
+func (h *Handler) LoadTree(ctx context.Context, input *LoadTreePathParams) (*LoadTreeOutput, error) {
+	err := h.service.LoadTree(input.Name)
+	if err != nil {
+		if err.Error() == "saved tree not found" {
+			return nil, huma.Error404NotFound("Saved tree not found")
+		}
+		return nil, huma.Error400BadRequest("Failed to load tree", err)
+	}
+
+	resp := &LoadTreeOutput{}
+	resp.Body.Message = "Tree loaded successfully"
+	return resp, nil
+}
+
+// DeleteSavedTree deletes a saved tree by name
+func (h *Handler) DeleteSavedTree(ctx context.Context, input *DeleteSavedTreePathParams) (*struct{}, error) {
+	err := h.service.DeleteSavedTree(input.Name)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, huma.Error404NotFound("Saved tree not found")
+		}
+		return nil, huma.Error500InternalServerError("Failed to delete saved tree", err)
 	}
 
 	return &struct{}{}, nil

@@ -433,3 +433,148 @@ func (r *PromptRepository) DeleteNote(noteID int) error {
 
 	return nil
 }
+
+// =============================================================================
+// SAVED TREE OPERATIONS
+// =============================================================================
+
+// SaveTree saves a tree configuration with a name
+func (r *PromptRepository) SaveTree(name string, treeData string) error {
+	query := `
+		INSERT INTO saved_trees (name, tree_data, updated_at)
+		VALUES ($1, $2::jsonb, CURRENT_TIMESTAMP)
+		ON CONFLICT (name) 
+		DO UPDATE SET 
+			tree_data = EXCLUDED.tree_data,
+			updated_at = CURRENT_TIMESTAMP
+	`
+
+	_, err := database.DB.Exec(query, name, treeData)
+	if err != nil {
+		return fmt.Errorf("save failed: %w", err)
+	}
+
+	return nil
+}
+
+// GetSavedTree retrieves a saved tree by name
+func (r *PromptRepository) GetSavedTree(name string) (*models.SavedTree, error) {
+	query := `
+		SELECT id, name, tree_data::text, created_at, updated_at
+		FROM saved_trees
+		WHERE name = $1
+	`
+
+	var st models.SavedTree
+	err := database.DB.QueryRow(query, name).Scan(&st.ID, &st.Name, &st.TreeData, &st.CreatedAt, &st.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, nil // Not found
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+
+	return &st, nil
+}
+
+// ListSavedTrees retrieves all saved tree names and metadata
+func (r *PromptRepository) ListSavedTrees() ([]models.SavedTreeInfo, error) {
+	query := `
+		SELECT name, created_at, updated_at
+		FROM saved_trees
+		ORDER BY updated_at DESC
+	`
+
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+	defer rows.Close()
+
+	var trees []models.SavedTreeInfo
+	for rows.Next() {
+		var st models.SavedTreeInfo
+		err := rows.Scan(&st.Name, &st.CreatedAt, &st.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+		trees = append(trees, st)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return trees, nil
+}
+
+// DeleteSavedTree deletes a saved tree by name
+func (r *PromptRepository) DeleteSavedTree(name string) error {
+	query := "DELETE FROM saved_trees WHERE name = $1"
+	result, err := database.DB.Exec(query, name)
+	if err != nil {
+		return fmt.Errorf("delete failed: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Not found
+	}
+
+	return nil
+}
+
+// ImportTree replaces all existing prompts and nodes with new data
+func (r *PromptRepository) ImportTree(treeData *models.TreeResponse) error {
+	// Start a transaction
+	tx, err := database.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("transaction begin failed: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Clear existing data (in correct order for foreign keys)
+	_, err = tx.Exec("TRUNCATE TABLE notes, nodes, prompts CASCADE")
+	if err != nil {
+		return fmt.Errorf("truncate failed: %w", err)
+	}
+
+	// Insert prompts
+	for _, promptNode := range treeData.Prompts {
+		// Insert prompt
+		var newID int
+		err := tx.QueryRow(`
+			INSERT INTO prompts (title, description, project_name)
+			VALUES ($1, $2, $3)
+			RETURNING id
+		`, promptNode.Title, promptNode.Description, treeData.Project).Scan(&newID)
+
+		if err != nil {
+			return fmt.Errorf("insert prompt failed: %w", err)
+		}
+
+		// Insert nodes for this prompt
+		for _, nodeSummary := range promptNode.Nodes {
+			_, err = tx.Exec(`
+				INSERT INTO nodes (prompt_id, name, action)
+				VALUES ($1, $2, $3)
+			`, newID, nodeSummary.Name, nodeSummary.Action)
+
+			if err != nil {
+				return fmt.Errorf("insert node failed: %w", err)
+			}
+		}
+	}
+
+	// Commit transaction
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("transaction commit failed: %w", err)
+	}
+
+	return nil
+}

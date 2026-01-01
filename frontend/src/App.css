@@ -33,6 +33,10 @@
   flex: 1;
 }
 
+.header-left .tree-manager {
+  margin-top: 12px;
+}
+
 .header-right {
   flex-shrink: 0;
   display: flex;

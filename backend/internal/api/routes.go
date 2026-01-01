@@ -28,6 +28,69 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		Tags:        []string{"Tree"},
 	}, handler.GetTree)
 
+	// Export tree as JSON
+	huma.Register(api, huma.Operation{
+		OperationID: "exportTree",
+		Method:      "GET",
+		Path:        "/tree/export",
+		Summary:     "Export Tree",
+		Description: "Returns the current prompt tree as JSON for copying/exporting",
+		Tags:        []string{"Tree"},
+	}, handler.ExportTree)
+
+	// Import tree from JSON
+	huma.Register(api, huma.Operation{
+		OperationID:   "importTree",
+		Method:        "POST",
+		Path:          "/tree/import",
+		Summary:       "Import Tree",
+		Description:   "Imports a prompt tree from JSON and replaces the current tree",
+		Tags:          []string{"Tree"},
+		DefaultStatus: 201,
+	}, handler.ImportTree)
+
+	// Save current tree
+	huma.Register(api, huma.Operation{
+		OperationID:   "saveTree",
+		Method:        "POST",
+		Path:          "/tree/save",
+		Summary:       "Save Tree",
+		Description:   "Saves the current prompt tree with a name for later retrieval",
+		Tags:          []string{"Tree"},
+		DefaultStatus: 201,
+	}, handler.SaveTree)
+
+	// List saved trees
+	huma.Register(api, huma.Operation{
+		OperationID: "listSavedTrees",
+		Method:      "GET",
+		Path:        "/tree/saves",
+		Summary:     "List Saved Trees",
+		Description: "Returns a list of all saved tree names and metadata",
+		Tags:        []string{"Tree"},
+	}, handler.ListSavedTrees)
+
+	// Load saved tree
+	huma.Register(api, huma.Operation{
+		OperationID:   "loadTree",
+		Method:        "POST",
+		Path:          "/tree/load/{name}",
+		Summary:       "Load Tree",
+		Description:   "Loads a saved tree and replaces the current tree",
+		Tags:          []string{"Tree"},
+		DefaultStatus: 201,
+	}, handler.LoadTree)
+
+	// Delete saved tree
+	huma.Register(api, huma.Operation{
+		OperationID: "deleteSavedTree",
+		Method:      "DELETE",
+		Path:        "/tree/saves/{name}",
+		Summary:     "Delete Saved Tree",
+		Description: "Deletes a saved tree by name",
+		Tags:        []string{"Tree"},
+	}, handler.DeleteSavedTree)
+
 	// Get single prompt
 	huma.Register(api, huma.Operation{
 		OperationID: "getPrompt",

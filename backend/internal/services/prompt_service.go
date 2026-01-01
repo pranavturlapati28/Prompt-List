@@ -1,7 +1,9 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/pranavturlapati28/merget-takehome/internal/models"
 	"github.com/pranavturlapati28/merget-takehome/internal/repository"
@@ -276,4 +278,95 @@ func (s *PromptService) DeleteNote(noteID int) error {
 	}
 
 	return s.repo.DeleteNote(noteID)
+}
+
+// =============================================================================
+// TREE IMPORT/EXPORT/SAVE/LOAD OPERATIONS
+// =============================================================================
+
+// ImportTree replaces the current tree with imported data
+func (s *PromptService) ImportTree(treeData *models.TreeResponse) error {
+	// Validate tree structure
+	if treeData.Project == "" {
+		return errors.New("project name is required")
+	}
+	if len(treeData.Prompts) == 0 {
+		return errors.New("at least one prompt is required")
+	}
+
+	// Validate each prompt
+	for _, prompt := range treeData.Prompts {
+		if prompt.Title == "" {
+			return errors.New("all prompts must have a title")
+		}
+		// Validate nodes
+		for _, node := range prompt.Nodes {
+			if node.Name == "" {
+				return errors.New("all nodes must have a name")
+			}
+		}
+	}
+
+	return s.repo.ImportTree(treeData)
+}
+
+// SaveTree saves the current tree with a name
+func (s *PromptService) SaveTree(name string) error {
+	if name == "" {
+		return errors.New("name is required")
+	}
+
+	// Get current tree
+	tree, err := s.GetTree()
+	if err != nil {
+		return fmt.Errorf("failed to get current tree: %w", err)
+	}
+
+	// Convert to JSON
+	treeJSON, err := json.Marshal(tree)
+	if err != nil {
+		return fmt.Errorf("failed to marshal tree: %w", err)
+	}
+
+	return s.repo.SaveTree(name, string(treeJSON))
+}
+
+// LoadTree loads a saved tree and replaces the current tree
+func (s *PromptService) LoadTree(name string) error {
+	if name == "" {
+		return errors.New("name is required")
+	}
+
+	// Get saved tree
+	savedTree, err := s.repo.GetSavedTree(name)
+	if err != nil {
+		return err
+	}
+	if savedTree == nil {
+		return errors.New("saved tree not found")
+	}
+
+	// Parse JSON
+	var treeData models.TreeResponse
+	err = json.Unmarshal([]byte(savedTree.TreeData), &treeData)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal tree data: %w", err)
+	}
+
+	// Import the tree
+	return s.ImportTree(&treeData)
+}
+
+// ListSavedTrees returns all saved tree names and metadata
+func (s *PromptService) ListSavedTrees() ([]models.SavedTreeInfo, error) {
+	return s.repo.ListSavedTrees()
+}
+
+// DeleteSavedTree deletes a saved tree by name
+func (s *PromptService) DeleteSavedTree(name string) error {
+	if name == "" {
+		return errors.New("name is required")
+	}
+
+	return s.repo.DeleteSavedTree(name)
 }

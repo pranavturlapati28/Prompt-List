@@ -1,0 +1,165 @@
+{
+  "project": "E-Commerce Platform",
+  "mainRequest": "Build a full-stack e-commerce platform with user authentication, product catalog, shopping cart, payment processing, and order management.",
+  "prompts": [
+    {
+      "id": 1,
+      "title": "Project Setup",
+      "description": "Initialize the development environment and set up the project structure.",
+      "subprompts": [
+        {
+          "name": "Initialize backend",
+          "action": "Create a Node.js/Express backend with TypeScript. Set up folder structure: routes/, controllers/, models/, middleware/, and config/. Install dependencies: express, mongoose, jsonwebtoken, bcrypt."
+        },
+        {
+          "name": "Initialize frontend",
+          "action": "Create a React frontend with Vite. Set up folder structure: components/, pages/, hooks/, services/, and store/. Install dependencies: react-router-dom, axios, zustand for state management."
+        },
+        {
+          "name": "Database setup",
+          "action": "Set up MongoDB database. Create connection configuration. Design initial schema for users, products, orders, and cart collections."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "User Authentication",
+      "description": "Implement user registration, login, and session management.",
+      "subprompts": [
+        {
+          "name": "User registration",
+          "action": "Create registration endpoint that validates email, hashes password with bcrypt, and stores user in database. Return JWT token on success."
+        },
+        {
+          "name": "Login system",
+          "action": "Create login endpoint that verifies credentials, generates JWT token with user ID and role. Set token expiration to 7 days."
+        },
+        {
+          "name": "Protected routes",
+          "action": "Create authentication middleware to verify JWT tokens. Protect routes that require user authentication (profile, cart, orders)."
+        },
+        {
+          "name": "Frontend auth",
+          "action": "Create login/register forms with validation. Store JWT in localStorage. Create auth context to manage user state across the app."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Product Catalog",
+      "description": "Build the product browsing and search functionality.",
+      "subprompts": [
+        {
+          "name": "Product model",
+          "action": "Create product schema with fields: name, description, price, category, images[], stock, SKU, ratings. Add indexes on category and name for fast queries."
+        },
+        {
+          "name": "Product listing",
+          "action": "Create GET /api/products endpoint with pagination, filtering by category, sorting by price/rating, and search by name. Return paginated results."
+        },
+        {
+          "name": "Product details",
+          "action": "Create GET /api/products/:id endpoint. Include related products in same category. Display product images, reviews, and availability status."
+        },
+        {
+          "name": "Product UI",
+          "action": "Build product grid/list view with filters sidebar. Create product detail page with image gallery, add to cart button, and quantity selector."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Shopping Cart",
+      "description": "Implement cart functionality for adding, updating, and removing items.",
+      "subprompts": [
+        {
+          "name": "Cart model",
+          "action": "Create cart schema linked to user. Store items as array with productId, quantity, and price snapshot. Calculate totals on read."
+        },
+        {
+          "name": "Add to cart",
+          "action": "Create POST /api/cart/add endpoint. Check if item exists, update quantity or add new item. Validate stock availability before adding."
+        },
+        {
+          "name": "Update cart",
+          "action": "Create PUT /api/cart/update endpoint to change quantities. Validate stock limits. Remove items if quantity set to 0."
+        },
+        {
+          "name": "Cart UI",
+          "action": "Build cart page showing items with thumbnails, quantities, prices, and subtotal. Add increment/decrement buttons and remove item option."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Checkout & Payment",
+      "description": "Implement order processing and payment integration.",
+      "subprompts": [
+        {
+          "name": "Shipping address",
+          "action": "Create address form for shipping details. Validate address fields. Store address in order document."
+        },
+        {
+          "name": "Order creation",
+          "action": "Create POST /api/orders endpoint. Validate cart, calculate totals including tax and shipping. Create order document with status 'pending'."
+        },
+        {
+          "name": "Payment integration",
+          "action": "Integrate Stripe payment gateway. Create payment intent on checkout. Handle payment confirmation webhook to update order status."
+        },
+        {
+          "name": "Order confirmation",
+          "action": "After successful payment, update order status to 'confirmed', reduce product stock, clear user cart, and send confirmation email."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Order Management",
+      "description": "Build order tracking and management features.",
+      "subprompts": [
+        {
+          "name": "Order history",
+          "action": "Create GET /api/orders endpoint for authenticated users. Return their orders sorted by date. Include order status, items, and totals."
+        },
+        {
+          "name": "Order details",
+          "action": "Create GET /api/orders/:id endpoint. Show full order information including shipping address, payment status, and tracking number if available."
+        },
+        {
+          "name": "Admin orders",
+          "action": "Create admin endpoint to view all orders with filters by status, date range. Allow status updates (processing, shipped, delivered)."
+        },
+        {
+          "name": "Order UI",
+          "action": "Build order history page with status badges. Create order detail page showing timeline, items, and shipping information."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Admin Dashboard",
+      "description": "Create admin interface for managing products and orders.",
+      "subprompts": [
+        {
+          "name": "Product management",
+          "action": "Build admin product CRUD interface. Allow creating, editing, deleting products. Upload product images to cloud storage (AWS S3 or Cloudinary)."
+        },
+        {
+          "name": "Inventory management",
+          "action": "Create inventory dashboard showing low stock alerts. Allow bulk stock updates. Track product sales and revenue analytics."
+        },
+        {
+          "name": "User management",
+          "action": "Create admin user list with search and filters. Allow viewing user details, order history, and account status management."
+        },
+        {
+          "name": "Analytics dashboard",
+          "action": "Display key metrics: total sales, orders count, popular products, revenue charts. Use Chart.js or Recharts for visualizations."
+        }
+      ]
+    }
+  ],
+  "finalIntegration": "Add email notifications for order confirmations and shipping updates. Implement product reviews and ratings system. Add wishlist functionality. Optimize images and implement lazy loading. Add SEO meta tags and structured data. Deploy backend to cloud (AWS/Heroku) and frontend to Vercel/Netlify."
+}
+

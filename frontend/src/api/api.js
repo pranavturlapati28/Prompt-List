@@ -24,6 +24,53 @@ export const getTree = async () => {
   return response.data;
 };
 
+/**
+ * GET /tree/export - Export current tree as JSON
+ */
+export const exportTree = async () => {
+  const response = await api.get('/tree/export');
+  return response.data;
+};
+
+/**
+ * POST /tree/import - Import a tree from JSON
+ */
+export const importTree = async (treeData) => {
+  const response = await api.post('/tree/import', { tree: treeData });
+  return response.data;
+};
+
+/**
+ * POST /tree/save - Save current tree with a name
+ */
+export const saveTree = async (name) => {
+  const response = await api.post('/tree/save', { name });
+  return response.data;
+};
+
+/**
+ * GET /tree/saves - List all saved trees
+ */
+export const listSavedTrees = async () => {
+  const response = await api.get('/tree/saves');
+  return response.data;
+};
+
+/**
+ * POST /tree/load/{name} - Load a saved tree
+ */
+export const loadTree = async (name) => {
+  const response = await api.post(`/tree/load/${encodeURIComponent(name)}`);
+  return response.data;
+};
+
+/**
+ * DELETE /tree/saves/{name} - Delete a saved tree
+ */
+export const deleteSavedTree = async (name) => {
+  await api.delete(`/tree/saves/${encodeURIComponent(name)}`);
+};
+
 // =============================================================================
 // PROMPT ENDPOINTS
 // =============================================================================

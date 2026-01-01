@@ -50,5 +50,21 @@ func Migrate() error {
 	}
 	fmt.Println("✓ Notes table ready")
 
+	// Create saved_trees table
+	// This stores saved prompt tree configurations
+	_, err = DB.Exec(`
+		CREATE TABLE IF NOT EXISTS saved_trees (
+			id SERIAL PRIMARY KEY,
+			name VARCHAR(255) NOT NULL UNIQUE,
+			tree_data JSONB NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to create saved_trees table: %w", err)
+	}
+	fmt.Println("✓ Saved trees table ready")
+
 	return nil
 }
