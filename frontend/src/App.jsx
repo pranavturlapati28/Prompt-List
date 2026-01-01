@@ -26,20 +26,21 @@ function App() {
   // Error state if API call fails
   const [error, setError] = useState(null);
 
+  // Fetch tree data function
+  const fetchTree = async () => {
+    try {
+      const data = await getTree();
+      setTree(data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching tree:', err);
+      setError('Failed to load prompt tree. Make sure the backend is running on http://localhost:8080');
+      setLoading(false);
+    }
+  };
+
   // Fetch tree data when component mounts
   useEffect(() => {
-    const fetchTree = async () => {
-      try {
-        const data = await getTree();
-        setTree(data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching tree:', err);
-        setError('Failed to load prompt tree. Make sure the backend is running on http://localhost:8080');
-        setLoading(false);
-      }
-    };
-
     fetchTree();
   }, []); // Empty dependency array = run once on mount
 
@@ -77,8 +78,16 @@ function App() {
       {/* Header */}
       <header className="header">
         <div className="header-content">
-          <h1>{tree?.project || 'Prompt Tree Explorer'}</h1>
-          <p>{tree?.mainRequest}</p>
+          <div className="header-left">
+            <h1>{tree?.project || 'Prompt Tree Explorer'}</h1>
+            <p>{tree?.mainRequest}</p>
+          </div>
+          <div className="header-right">
+            <div className="instructions">
+              <span className="instructions-icon">ℹ</span>
+              <span>Right-click nodes to edit or delete</span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -90,12 +99,13 @@ function App() {
             prompts={tree?.prompts || []}
             onSelectPrompt={handleSelectPrompt}
             selectedPromptId={selectedPrompt?.id}
+            onTreeUpdate={fetchTree}
           />
         </div>
 
         {/* Right side: Details panel */}
         <div className="panel-container">
-          <SidePanel prompt={selectedPrompt} />
+          <SidePanel prompt={selectedPrompt} onTreeUpdate={fetchTree} />
         </div>
       </main>
     </div>

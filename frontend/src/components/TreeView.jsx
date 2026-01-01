@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import './TreeView.css';
+import NodeContextMenu from './NodeContextMenu';
+import NodeEditModal from './NodeEditModal';
+import PromptEditModal from './PromptEditModal';
+import ConfirmModal from './ConfirmModal';
+import { updateNode, deleteNode, updatePrompt, deletePrompt } from '../api/api';
 
 /**
  * Generate a color based on index
@@ -21,13 +26,22 @@ function getColor(index) {
  * TreeView Component
  * Displays prompts in a vertical timeline with horizontal node branches
  */
-function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId }) {
+function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId, onTreeUpdate }) {
   const [expandedIds, setExpandedIds] = useState(
     new Set(prompts.map(p => p.id))
   );
 
   // Track the start index for each prompt's visible nodes
   const [nodeStartIndex, setNodeStartIndex] = useState({});
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState(null);
+  const [editingNode, setEditingNode] = useState(null);
+  const [promptContextMenu, setPromptContextMenu] = useState(null);
+  const [editingPrompt, setEditingPrompt] = useState(null);
+  
+  // Confirmation modal state
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   // Track container width to calculate max visible nodes
   const [containerWidth, setContainerWidth] = useState(0);
@@ -87,6 +101,145 @@ function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId }) {
       ...prev,
       [promptId]: Math.max(0, currentStart - maxVisible)
     }));
+  };
+
+  // Handle right-click on node
+  const handleNodeRightClick = (e, node, promptId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      node,
+      promptId,
+    });
+  };
+
+  // Handle node delete
+  const handleDeleteNode = () => {
+    if (!contextMenu) return;
+    const { node, promptId } = contextMenu;
+    setConfirmDelete({
+      type: 'node',
+      item: node,
+      promptId,
+      message: `Are you sure you want to delete "${node.name}"?`,
+    });
+    setContextMenu(null);
+  };
+
+  // Confirm and execute node delete
+  const confirmDeleteNode = async () => {
+    if (!confirmDelete || confirmDelete.type !== 'node') return;
+    
+    try {
+      await deleteNode(confirmDelete.promptId, confirmDelete.item.id);
+      // Refresh the tree
+      if (onTreeUpdate) {
+        await onTreeUpdate();
+      }
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      alert('Failed to delete node. Please try again.');
+    }
+    
+    setConfirmDelete(null);
+  };
+
+  // Handle node edit
+  const handleEditNode = () => {
+    if (!contextMenu) return;
+    setEditingNode({
+      node: contextMenu.node,
+      promptId: contextMenu.promptId,
+    });
+    setContextMenu(null);
+  };
+
+  // Handle save edited node
+  const handleSaveNode = async (updatedData) => {
+    if (!editingNode) return;
+
+    try {
+      await updateNode(editingNode.promptId, editingNode.node.id, updatedData);
+      // Refresh the tree
+      if (onTreeUpdate) {
+        await onTreeUpdate();
+      }
+      setEditingNode(null);
+    } catch (error) {
+      console.error('Error updating node:', error);
+      alert('Failed to update node. Please try again.');
+    }
+  };
+
+  // Handle right-click on prompt
+  const handlePromptRightClick = (e, prompt) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPromptContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      prompt,
+    });
+  };
+
+  // Handle prompt delete
+  const handleDeletePrompt = () => {
+    if (!promptContextMenu) return;
+    const { prompt } = promptContextMenu;
+    setConfirmDelete({
+      type: 'prompt',
+      item: prompt,
+      message: `Are you sure you want to delete "${prompt.title}"? This will also delete all associated nodes and notes.`,
+    });
+    setPromptContextMenu(null);
+  };
+
+  // Confirm and execute prompt delete
+  const confirmDeletePrompt = async () => {
+    if (!confirmDelete || confirmDelete.type !== 'prompt') return;
+    
+    try {
+      await deletePrompt(confirmDelete.item.id);
+      // Refresh the tree
+      if (onTreeUpdate) {
+        await onTreeUpdate();
+      }
+      // Clear selection if deleted prompt was selected
+      if (selectedPromptId === confirmDelete.item.id) {
+        onSelectPrompt(null);
+      }
+    } catch (error) {
+      console.error('Error deleting prompt:', error);
+      alert('Failed to delete prompt. Please try again.');
+    }
+    
+    setConfirmDelete(null);
+  };
+
+  // Handle prompt edit
+  const handleEditPrompt = () => {
+    if (!promptContextMenu) return;
+    setEditingPrompt(promptContextMenu.prompt);
+    setPromptContextMenu(null);
+  };
+
+  // Handle save edited prompt
+  const handleSavePrompt = async (updatedData) => {
+    if (!editingPrompt) return;
+
+    try {
+      await updatePrompt(editingPrompt.id, updatedData);
+      // Refresh the tree
+      if (onTreeUpdate) {
+        await onTreeUpdate();
+      }
+      setEditingPrompt(null);
+    } catch (error) {
+      console.error('Error updating prompt:', error);
+      alert('Failed to update prompt. Please try again.');
+    }
   };
 
   // Calculate max visible nodes based on container width
@@ -150,14 +303,16 @@ function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId }) {
                   className={`prompt-circle ${isSelected ? 'selected' : ''}`}
                   style={{ backgroundColor: color }}
                   onClick={(e) => handleCircleClick(prompt, e)}
+                  onContextMenu={(e) => handlePromptRightClick(e, prompt)}
                 >
-                  {prompt.id}
+                  {index + 1}
                 </div>
 
                 {/* Prompt Title */}
                 <div
                   className="prompt-title"
                   onClick={() => handlePromptClick(prompt)}
+                  onContextMenu={(e) => handlePromptRightClick(e, prompt)}
                 >
                   {prompt.title}
                 </div>
@@ -191,7 +346,11 @@ function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId }) {
 
                       {/* Visible Nodes */}
                       {visibleNodes.map((node, nodeIndex) => (
-                        <div key={node.id || nodeIndex} className="node-item">
+                        <div 
+                          key={node.id || nodeIndex} 
+                          className="node-item"
+                          onContextMenu={(e) => handleNodeRightClick(e, node, prompt.id)}
+                        >
                           <div
                             className="node-circle"
                             style={{
@@ -238,6 +397,63 @@ function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId }) {
           </div>
         </div>
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <NodeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          onEdit={handleEditNode}
+          onDelete={handleDeleteNode}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingNode && (
+        <NodeEditModal
+          node={editingNode.node}
+          onClose={() => setEditingNode(null)}
+          onSave={handleSaveNode}
+        />
+      )}
+
+      {/* Prompt Context Menu */}
+      {promptContextMenu && (
+        <NodeContextMenu
+          x={promptContextMenu.x}
+          y={promptContextMenu.y}
+          onClose={() => setPromptContextMenu(null)}
+          onEdit={handleEditPrompt}
+          onDelete={handleDeletePrompt}
+        />
+      )}
+
+      {/* Prompt Edit Modal */}
+      {editingPrompt && (
+        <PromptEditModal
+          prompt={editingPrompt}
+          onClose={() => setEditingPrompt(null)}
+          onSave={handleSavePrompt}
+        />
+      )}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmDelete !== null}
+        title="Confirm Delete"
+        message={confirmDelete?.message || ''}
+        onConfirm={() => {
+          if (confirmDelete?.type === 'node') {
+            confirmDeleteNode();
+          } else if (confirmDelete?.type === 'prompt') {
+            confirmDeletePrompt();
+          }
+        }}
+        onCancel={() => setConfirmDelete(null)}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

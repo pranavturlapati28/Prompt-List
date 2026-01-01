@@ -67,6 +67,85 @@
     color: var(--text-secondary);
     line-height: 1.6;
   }
+
+  .editable-header,
+  .editable-description {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+  }
+
+  .editable-header h2 {
+    flex: 1;
+    margin: 0;
+  }
+
+  .editable-description {
+    margin-top: var(--spacing-sm);
+  }
+
+  .editable-description .description {
+    flex: 1;
+    margin: 0;
+  }
+
+  .editable-node-name,
+  .editable-node-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex: 1;
+  }
+
+  .editable-node-name strong {
+    flex: 1;
+  }
+
+  .editable-node-action {
+    margin-top: var(--spacing-xs);
+  }
+
+  .editable-node-action .node-action {
+    flex: 1;
+    margin: 0;
+  }
+
+  .action-icons {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+  }
+
+  .editable-header:hover .action-icons,
+  .editable-description:hover .action-icons,
+  .editable-node-name:hover .action-icons,
+  .editable-node-action:hover .action-icons {
+    opacity: 1;
+  }
+
+  .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-normal);
+  }
+
+  .icon-button:hover {
+    background-color: var(--bg-tertiary);
+  }
+
+  .icon-button-danger:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
   
   /* -----------------------------------------------------------------------------
      Panel Sections
@@ -92,6 +171,44 @@
   
   .section-icon {
     font-size: 16px;
+  }
+
+  .section-header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .section-header-with-action h3 {
+    margin-bottom: 0;
+    flex: 1;
+  }
+
+  .add-node-button {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .add-node-button:hover {
+    background: var(--color-indigo);
+    border-color: var(--color-indigo);
+    color: white;
+    transform: scale(1.1);
   }
   
   /* -----------------------------------------------------------------------------

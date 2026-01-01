@@ -30,12 +30,54 @@
     margin-bottom: 0;
   }
   
+  .note-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+
   .note-content {
     font-size: 13px;
     color: var(--text-primary);
     line-height: 1.5;
-    margin: 0 0 var(--spacing-sm) 0;
+    margin: 0;
     white-space: pre-wrap; /* Preserve line breaks */
+    flex: 1;
+  }
+
+  .note-item .action-icons {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+    flex-shrink: 0;
+  }
+
+  .note-item:hover .action-icons {
+    opacity: 1;
+  }
+
+  .note-item .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-normal);
+  }
+
+  .note-item .icon-button:hover {
+    background-color: var(--bg-tertiary);
+  }
+
+  .note-item .icon-button-danger:hover {
+    background-color: rgba(239, 68, 68, 0.1);
   }
   
   .note-date {

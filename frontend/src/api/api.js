@@ -45,6 +45,21 @@ export const createPrompt = async (prompt) => {
   return response.data;
 };
 
+/**
+ * PUT /prompts/:id - Update a prompt
+ */
+export const updatePrompt = async (promptId, prompt) => {
+  const response = await api.put(`/prompts/${promptId}`, prompt);
+  return response.data;
+};
+
+/**
+ * DELETE /prompts/:id - Delete a prompt
+ */
+export const deletePrompt = async (promptId) => {
+  await api.delete(`/prompts/${promptId}`);
+};
+
 // =============================================================================
 // NODE ENDPOINTS
 // =============================================================================
@@ -63,6 +78,21 @@ export const getPromptNodes = async (id) => {
 export const createNode = async (promptId, node) => {
   const response = await api.post(`/prompts/${promptId}/nodes`, node);
   return response.data;
+};
+
+/**
+ * PUT /prompts/:id/nodes/:nodeId - Update a node
+ */
+export const updateNode = async (promptId, nodeId, node) => {
+  const response = await api.put(`/prompts/${promptId}/nodes/${nodeId}`, node);
+  return response.data;
+};
+
+/**
+ * DELETE /prompts/:id/nodes/:nodeId - Delete a node
+ */
+export const deleteNode = async (promptId, nodeId) => {
+  await api.delete(`/prompts/${promptId}/nodes/${nodeId}`);
 };
 
 // =============================================================================
@@ -85,6 +115,21 @@ export const getNotes = async (promptId) => {
 export const createNote = async (promptId, content) => {
   const response = await api.post(`/prompts/${promptId}/notes`, { content });
   return response.data;
+};
+
+/**
+ * PUT /prompts/:id/notes/:noteId - Update a note
+ */
+export const updateNote = async (promptId, noteId, content) => {
+  const response = await api.put(`/prompts/${promptId}/notes/${noteId}`, { content });
+  return response.data;
+};
+
+/**
+ * DELETE /prompts/:id/notes/:noteId - Delete a note
+ */
+export const deleteNote = async (promptId, noteId) => {
+  await api.delete(`/prompts/${promptId}/notes/${noteId}`);
 };
 
 export default api;
