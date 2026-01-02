@@ -79,6 +79,11 @@ curl -H "Authorization: Bearer <YOUR_API_KEY>" <BACKEND_URL>/tree
 ---
 
 ### Get Single Prompt
+
+You can see prompt ID here:
+
+<img width="885" height="401" alt="image" src="https://github.com/user-attachments/assets/e819b020-8a0b-4f7d-81d4-13c9acfa9a8a" />
+
 Get details for a specific prompt by ID.
 
 ```bash
