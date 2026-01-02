@@ -45,6 +45,7 @@ func main() {
 	handler := api.NewHandler(service)
 
 	router := chi.NewMux()
+
 	router.Use(middleware.Recoverer)
 	router.Use(corsMiddleware)
 	router.Use(apiKeyMiddleware(cfg))
@@ -66,6 +67,11 @@ func main() {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/events" || r.URL.Path == "/test-sse" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		
 		origin := r.Header.Get("Origin")
 		allowedOrigins := []string{
 			"http://localhost:5173",

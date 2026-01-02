@@ -70,7 +70,7 @@ func Migrate() error {
 	
 	_, err = DB.Exec(`
 		INSERT INTO project_settings (id, project_name, main_request)
-		VALUES (1, 'Personal Finance Copilot', 'Build a web app that helps users track spending, set goals, and get AI-powered budgeting advice from categorized transactions.')
+		VALUES (1, '3D Racing Game', 'Build a 3D racing video game in React Three Fiber where the player drives against AI opponents on a pregenerated racing track.')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	if err != nil {
