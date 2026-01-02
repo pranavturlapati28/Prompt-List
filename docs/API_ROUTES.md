@@ -9,6 +9,33 @@ This guide shows you how to test all the API endpoints using curl commands.
 
 **Important:** Replace `<BACKEND_URL>` with your backend URL and `<YOUR_API_KEY>` with your API key in all commands below.
 
+---
+
+## Quick Tips
+
+1. **Set environment variables** to make testing easier:
+   ```bash
+   export API_KEY="<YOUR_API_KEY>"
+   export BACKEND_URL="<BACKEND_URL>"
+   ```
+   Then use: `curl -H "Authorization: Bearer $API_KEY" "$BACKEND_URL/tree"`
+
+2. **Pretty print JSON** responses:
+   ```bash
+   curl -H "Authorization: Bearer <YOUR_API_KEY>" <BACKEND_URL>/tree | jq .
+   ```
+   (Requires `jq` to be installed)
+
+3. **Test authentication** first:
+   ```bash
+   # This should fail
+   curl <BACKEND_URL>/tree
+   
+   # This should work
+   curl -H "Authorization: Bearer <YOUR_API_KEY>" <BACKEND_URL>/tree
+   ```
+
+
 ## Authentication
 
 All endpoints (except `/health` and `/docs`) require an API key. Add this header to every request:
@@ -427,28 +454,3 @@ The request body format is invalid.
 
 **Fix:** Check your JSON format matches the examples above.
 
----
-
-## Quick Tips
-
-1. **Set environment variables** to make testing easier:
-   ```bash
-   export API_KEY="<YOUR_API_KEY>"
-   export BACKEND_URL="<BACKEND_URL>"
-   ```
-   Then use: `curl -H "Authorization: Bearer $API_KEY" "$BACKEND_URL/tree"`
-
-2. **Pretty print JSON** responses:
-   ```bash
-   curl -H "Authorization: Bearer <YOUR_API_KEY>" <BACKEND_URL>/tree | jq .
-   ```
-   (Requires `jq` to be installed)
-
-3. **Test authentication** first:
-   ```bash
-   # This should fail
-   curl <BACKEND_URL>/tree
-   
-   # This should work
-   curl -H "Authorization: Bearer <YOUR_API_KEY>" <BACKEND_URL>/tree
-   ```
