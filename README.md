@@ -24,7 +24,45 @@ The frontend provides a web interface for managing prompt trees. You can:
 - Import/export trees as JSON
 - Save and load multiple tree configurations
 
-*(Screenshots will be added here)*
+<img width="1437" height="800" alt="image" src="https://github.com/user-attachments/assets/8e9171e7-6227-4552-9fba-6e95196b47c4" />
+
+Importing Trees
+
+<img width="1437" height="800" alt="image" src="https://github.com/user-attachments/assets/56479847-2824-4230-bf1a-e9ac1f38747f" />
+
+Exporting Trees
+
+<img width="1437" height="800" alt="image" src="https://github.com/user-attachments/assets/8959c1bf-0617-4ccb-9c53-a5801640f082" />
+
+Save/Load Trees
+
+<img width="1437" height="800" alt="image" src="https://github.com/user-attachments/assets/7203a061-adc6-4df1-8a6e-d3b0b6d157d9" />
+
+Editing Tree Subprompts
+
+<img width="1437" height="800" alt="image" src="https://github.com/user-attachments/assets/d0ff117f-0523-4028-8965-616106c2293d" />
+
+Editing Tree Prompts
+
+<img width="1437" height="800" alt="image" src="https://github.com/user-attachments/assets/1c6898b2-b737-4eec-8a38-6afe769733f8" />
+
+Side Panel
+
+<img width="360" height="636" alt="image" src="https://github.com/user-attachments/assets/e909bb97-a0fa-4b74-bad9-3ef0d2d2723a" />
+
+Edit Actions
+
+<img width="1440" height="810" alt="image" src="https://github.com/user-attachments/assets/8c485920-2d8e-444d-ba0e-bde15fb4de68" />
+
+Add Notes
+
+<img width="361" height="185" alt="image" src="https://github.com/user-attachments/assets/baf1999e-f348-4a9c-b0f6-46eb5e66ff0e" />
+
+
+
+
+
+
 
 ### Backend API
 **URL**: `https://backend-709459926380.us-central1.run.app`
