@@ -20,10 +20,10 @@ All endpoints (except `/health` and `/docs`) require an API key. Add this header
 ## API Endpoints
 
 ### Health Check
-Check if the API is running (no authentication needed).
+Check if the API is running.
 
 ```bash
-curl <BACKEND_URL>/health
+curl -H "Authorization: Bearer $API_KEY" $BACKEND_URL/tree
 ```
 
 **Sample response:**
