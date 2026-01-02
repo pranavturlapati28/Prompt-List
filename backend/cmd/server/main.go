@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
@@ -18,62 +19,37 @@ import (
 )
 
 func main() {
-	// =========================================================================
-	// STEP 1: Load Configuration
-	// =========================================================================
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// =========================================================================
-	// STEP 2: Connect to Database
-	// =========================================================================
-	err = database.Connect(cfg.DatabaseURL)
+	err = database.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close() // Ensure connection is closed when app exits
+	defer database.Close()
 
-	// =========================================================================
-	// STEP 3: Run Migrations (create tables)
-	// =========================================================================
 	err = database.Migrate()
 	if err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	// =========================================================================
-	// STEP 4: Seed Initial Data
-	// =========================================================================
 	err = database.Seed()
 	if err != nil {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 
-	// =========================================================================
-	// STEP 5: Initialize Application Layers (Dependency Injection)
-	// =========================================================================
-	// Create instances and wire dependencies
-	repo := repository.NewPromptRepository()    // Data access layer
-	service := services.NewPromptService(repo)  // Business logic layer
-	handler := api.NewHandler(service)          // HTTP handler layer
+	repo := repository.NewPromptRepository()
+	service := services.NewPromptService(repo)
+	handler := api.NewHandler(service)
 
-	// =========================================================================
-	// STEP 6: Create HTTP Router
-	// =========================================================================
 	router := chi.NewMux()
+	router.Use(middleware.Recoverer)
+	router.Use(corsMiddleware)
+	router.Use(apiKeyMiddleware(cfg))
+	router.Use(middleware.Logger)
 
-	// Add middleware
-	router.Use(middleware.Recoverer) // Recover from panics
-	router.Use(corsMiddleware)       // Handle CORS for frontend
-	
-	// Add logger middleware
-	router.Use(middleware.Logger)    // Log all requests
-
-	// =========================================================================
-	// STEP 7: Create Huma API with OpenAPI Documentation
-	// =========================================================================
 	humaConfig := huma.DefaultConfig("Prompt Tree API", "1.0.0")
 	humaConfig.Info.Description = "API for exploring and annotating hierarchical prompt trees"
 	humaConfig.Info.Contact = &huma.Contact{
@@ -82,30 +58,31 @@ func main() {
 	}
 
 	humaAPI := humachi.New(router, humaConfig)
-
-	// =========================================================================
-	// STEP 9: Register Huma Routes
-	// =========================================================================
 	api.RegisterRoutes(humaAPI, handler)
 
-	// =========================================================================
-	// STEP 11: Start Server
-	// =========================================================================
-	printStartupBanner(cfg.Port)
-
+	printStartupBanner(cfg.Port, cfg)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, router))
 }
 
-// corsMiddleware handles Cross-Origin Resource Sharing
-// This allows the frontend (on a different port) to call the API
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow requests from any origin (in production, be more specific)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
+		origin := r.Header.Get("Origin")
+		allowedOrigins := []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"https://frontend-709459926380.us-central1.run.app",
+		}
+		
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
+		
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		// Handle preflight requests
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -115,14 +92,77 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// printStartupBanner prints a nice startup message
-func printStartupBanner(port string) {
+func apiKeyMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			allowedOrigins := []string{
+				"http://localhost:5173",
+				"http://localhost:3000",
+				"https://frontend-709459926380.us-central1.run.app",
+			}
+			
+			origin := r.Header.Get("Origin")
+			isAllowedOrigin := false
+			
+			for _, allowed := range allowedOrigins {
+				if origin == allowed {
+					isAllowedOrigin = true
+					break
+				}
+			}
+			
+			if cfg.APIKey == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			
+			if isAllowedOrigin {
+				next.ServeHTTP(w, r)
+				return
+			}
+			
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprintf(w, `{"error":"API key required. Use Authorization: Bearer <your-api-key>"}`)
+				return
+			}
+			
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprintf(w, `{"error":"Invalid authorization format. Use Authorization: Bearer <your-api-key>"}`)
+				return
+			}
+			
+			if parts[1] != cfg.APIKey {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprintf(w, `{"error":"Invalid API key"}`)
+				return
+			}
+			
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func printStartupBanner(port string, cfg *config.Config) {
 	fmt.Println("")
 	fmt.Println("╔═══════════════════════════════════════════════════════════════╗")
 	fmt.Println("║              Prompt Tree API Server                        ║")
 	fmt.Println("╠═══════════════════════════════════════════════════════════════╣")
 	fmt.Printf("║  Server:      http://localhost:%s                            ║\n", port)
 	fmt.Printf("║  API Docs:    http://localhost:%s/docs                       ║\n", port)
+	if cfg.APIKey != "" {
+		fmt.Println("╠═══════════════════════════════════════════════════════════════╣")
+		fmt.Println("║  Security:                                                   ║")
+		fmt.Println("║    API Key:     Required for external requests              ║")
+		fmt.Println("║    Frontend:    Whitelisted (no API key needed)              ║")
+		fmt.Println("║    Usage:       Authorization: Bearer <your-api-key>         ║")
+	}
 	fmt.Println("╠═══════════════════════════════════════════════════════════════╣")
 	fmt.Println("║  Endpoints:                                                   ║")
 	fmt.Println("║    GET    /health              Health check                   ║")

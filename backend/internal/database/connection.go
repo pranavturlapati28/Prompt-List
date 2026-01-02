@@ -3,42 +3,48 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq"
 )
 
-// DB is the global database connection pool
 var DB *sql.DB
 
-// Connect establishes a connection to PostgreSQL
-func Connect(databaseURL string) error {
-	var err error
+func Connect() error {
+	var connStr string
 
-	// Open a connection pool to the database
-	DB, err = sql.Open("postgres", databaseURL)
-	if err != nil {
-		return fmt.Errorf("failed to open database connection: %w", err)
+	instanceConnection := os.Getenv("INSTANCE_CONNECTION_NAME")
+	
+	if instanceConnection != "" {
+		socketDir := "/cloudsql"
+		dbUser := os.Getenv("DB_USER")
+		dbPass := os.Getenv("DB_PASS")
+		dbName := os.Getenv("DB_NAME")
+		
+		connStr = fmt.Sprintf(
+			"user=%s password=%s database=%s host=%s/%s sslmode=disable",
+			dbUser, dbPass, dbName, socketDir, instanceConnection,
+		)
+	} else {
+		connStr = os.Getenv("DATABASE_URL")
 	}
 
-	// Verify the connection actually works
-	err = DB.Ping()
+	var err error
+	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+
+	if err = DB.Ping(); err != nil {
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Configure the connection pool
-	DB.SetMaxOpenConns(25)                  // Maximum number of open connections
-	DB.SetMaxIdleConns(5)                   // Maximum number of idle connections
-	DB.SetConnMaxLifetime(5 * 60 * 1000000000) // 5 minutes in nanoseconds
-
-	fmt.Println("✓ Connected to PostgreSQL")
+	fmt.Println("✓ Connected to database")
 	return nil
 }
 
-// Close closes the database connection
 func Close() {
 	if DB != nil {
 		DB.Close()
-		fmt.Println("✓ Database connection closed")
 	}
 }

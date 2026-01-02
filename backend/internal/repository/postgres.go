@@ -9,20 +9,12 @@ import (
 	"github.com/pranavturlapati28/merget-takehome/internal/models"
 )
 
-// PromptRepository handles all database operations
-// This is the only layer that knows about SQL
 type PromptRepository struct{}
 
-// NewPromptRepository creates a new repository instance
 func NewPromptRepository() *PromptRepository {
 	return &PromptRepository{}
 }
 
-// =============================================================================
-// PROMPT OPERATIONS
-// =============================================================================
-
-// GetAllPrompts retrieves all prompts from the database
 func (r *PromptRepository) GetAllPrompts() ([]models.Prompt, error) {
 	query := `
 		SELECT id, title, description, project_name 
@@ -34,7 +26,7 @@ func (r *PromptRepository) GetAllPrompts() ([]models.Prompt, error) {
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
-	defer rows.Close() // Always close rows to release connection
+	defer rows.Close()
 
 	var prompts []models.Prompt
 	for rows.Next() {
@@ -46,7 +38,6 @@ func (r *PromptRepository) GetAllPrompts() ([]models.Prompt, error) {
 		prompts = append(prompts, p)
 	}
 
-	// Check for errors during iteration
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
@@ -54,7 +45,6 @@ func (r *PromptRepository) GetAllPrompts() ([]models.Prompt, error) {
 	return prompts, nil
 }
 
-// GetPromptByID retrieves a single prompt by its ID
 func (r *PromptRepository) GetPromptByID(id int) (*models.Prompt, error) {
 	query := `
 		SELECT id, title, description, project_name 
@@ -77,7 +67,6 @@ func (r *PromptRepository) GetPromptByID(id int) (*models.Prompt, error) {
 	return &p, nil
 }
 
-// CreatePrompt inserts a new prompt into the database
 func (r *PromptRepository) CreatePrompt(title, description string) (*models.Prompt, error) {
 	query := `
 		INSERT INTO prompts (title, description, project_name) 
@@ -99,7 +88,6 @@ func (r *PromptRepository) CreatePrompt(title, description string) (*models.Prom
 	}, nil
 }
 
-// PromptExists checks if a prompt with the given ID exists
 func (r *PromptRepository) PromptExists(id int) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM prompts WHERE id = $1)"
@@ -110,9 +98,7 @@ func (r *PromptRepository) PromptExists(id int) (bool, error) {
 	return exists, nil
 }
 
-// UpdatePrompt updates an existing prompt
 func (r *PromptRepository) UpdatePrompt(id int, title, description string) (*models.Prompt, error) {
-	// Build dynamic UPDATE query based on provided fields
 	query := "UPDATE prompts SET"
 	var args []interface{}
 	argPos := 1
@@ -133,7 +119,6 @@ func (r *PromptRepository) UpdatePrompt(id int, title, description string) (*mod
 	}
 
 	if len(args) == 0 {
-		// No fields to update, just return the existing prompt
 		return r.GetPromptByID(id)
 	}
 
@@ -152,7 +137,6 @@ func (r *PromptRepository) UpdatePrompt(id int, title, description string) (*mod
 	return &p, nil
 }
 
-// DeletePrompt deletes a prompt by ID (cascade will delete related nodes and notes)
 func (r *PromptRepository) DeletePrompt(id int) error {
 	query := "DELETE FROM prompts WHERE id = $1"
 	result, err := database.DB.Exec(query, id)
@@ -172,11 +156,6 @@ func (r *PromptRepository) DeletePrompt(id int) error {
 	return nil
 }
 
-// =============================================================================
-// NODE OPERATIONS
-// =============================================================================
-
-// GetNodesByPromptID retrieves all nodes for a specific prompt
 func (r *PromptRepository) GetNodesByPromptID(promptID int) ([]models.Node, error) {
 	query := `
 		SELECT id, prompt_id, name, action 
@@ -208,7 +187,6 @@ func (r *PromptRepository) GetNodesByPromptID(promptID int) ([]models.Node, erro
 	return nodes, nil
 }
 
-// CreateNode inserts a new node for a prompt
 func (r *PromptRepository) CreateNode(promptID int, name, action string) (*models.Node, error) {
 	query := `
 		INSERT INTO nodes (prompt_id, name, action) 
@@ -230,7 +208,6 @@ func (r *PromptRepository) CreateNode(promptID int, name, action string) (*model
 	}, nil
 }
 
-// GetNodeByID retrieves a single node by its ID
 func (r *PromptRepository) GetNodeByID(nodeID int) (*models.Node, error) {
 	query := `
 		SELECT id, prompt_id, name, action 
@@ -251,9 +228,7 @@ func (r *PromptRepository) GetNodeByID(nodeID int) (*models.Node, error) {
 	return &n, nil
 }
 
-// UpdateNode updates an existing node
 func (r *PromptRepository) UpdateNode(nodeID int, name, action string) (*models.Node, error) {
-	// Build dynamic UPDATE query based on provided fields
 	query := "UPDATE nodes SET"
 	var args []interface{}
 	argPos := 1
@@ -274,7 +249,6 @@ func (r *PromptRepository) UpdateNode(nodeID int, name, action string) (*models.
 	}
 
 	if len(args) == 0 {
-		// No fields to update, just return the existing node
 		return r.GetNodeByID(nodeID)
 	}
 
@@ -293,7 +267,6 @@ func (r *PromptRepository) UpdateNode(nodeID int, name, action string) (*models.
 	return &n, nil
 }
 
-// DeleteNode deletes a node by ID
 func (r *PromptRepository) DeleteNode(nodeID int) error {
 	query := "DELETE FROM nodes WHERE id = $1"
 	result, err := database.DB.Exec(query, nodeID)
@@ -313,11 +286,6 @@ func (r *PromptRepository) DeleteNode(nodeID int) error {
 	return nil
 }
 
-// =============================================================================
-// NOTE OPERATIONS
-// =============================================================================
-
-// GetNotesByPromptID retrieves all notes for a specific prompt
 func (r *PromptRepository) GetNotesByPromptID(promptID int) ([]models.Note, error) {
 	query := `
 		SELECT id, prompt_id, content, created_at 
@@ -349,7 +317,6 @@ func (r *PromptRepository) GetNotesByPromptID(promptID int) ([]models.Note, erro
 	return notes, nil
 }
 
-// CreateNote inserts a new note for a prompt
 func (r *PromptRepository) CreateNote(promptID int, content string) (*models.Note, error) {
 	query := `
 		INSERT INTO notes (prompt_id, content, created_at) 
@@ -372,7 +339,6 @@ func (r *PromptRepository) CreateNote(promptID int, content string) (*models.Not
 	}, nil
 }
 
-// GetNoteByID retrieves a single note by its ID
 func (r *PromptRepository) GetNoteByID(noteID int) (*models.Note, error) {
 	query := `
 		SELECT id, prompt_id, content, created_at 
@@ -393,7 +359,6 @@ func (r *PromptRepository) GetNoteByID(noteID int) (*models.Note, error) {
 	return &n, nil
 }
 
-// UpdateNote updates an existing note
 func (r *PromptRepository) UpdateNote(noteID int, content string) (*models.Note, error) {
 	query := `
 		UPDATE notes 
@@ -414,7 +379,6 @@ func (r *PromptRepository) UpdateNote(noteID int, content string) (*models.Note,
 	return &n, nil
 }
 
-// DeleteNote deletes a note by ID
 func (r *PromptRepository) DeleteNote(noteID int) error {
 	query := "DELETE FROM notes WHERE id = $1"
 	result, err := database.DB.Exec(query, noteID)
@@ -434,9 +398,6 @@ func (r *PromptRepository) DeleteNote(noteID int) error {
 	return nil
 }
 
-// =============================================================================
-// SAVED TREE OPERATIONS
-// =============================================================================
 
 // SaveTree saves a tree configuration with a name
 func (r *PromptRepository) SaveTree(name string, treeData string) error {
@@ -457,7 +418,6 @@ func (r *PromptRepository) SaveTree(name string, treeData string) error {
 	return nil
 }
 
-// GetSavedTree retrieves a saved tree by name
 func (r *PromptRepository) GetSavedTree(name string) (*models.SavedTree, error) {
 	query := `
 		SELECT id, name, tree_data::text, created_at, updated_at
@@ -478,7 +438,6 @@ func (r *PromptRepository) GetSavedTree(name string) (*models.SavedTree, error) 
 	return &st, nil
 }
 
-// ListSavedTrees retrieves all saved tree names and metadata
 func (r *PromptRepository) ListSavedTrees() ([]models.SavedTreeInfo, error) {
 	query := `
 		SELECT name, created_at, updated_at
@@ -509,7 +468,6 @@ func (r *PromptRepository) ListSavedTrees() ([]models.SavedTreeInfo, error) {
 	return trees, nil
 }
 
-// DeleteSavedTree deletes a saved tree by name
 func (r *PromptRepository) DeleteSavedTree(name string) error {
 	query := "DELETE FROM saved_trees WHERE name = $1"
 	result, err := database.DB.Exec(query, name)
@@ -529,24 +487,35 @@ func (r *PromptRepository) DeleteSavedTree(name string) error {
 	return nil
 }
 
-// ImportTree replaces all existing prompts and nodes with new data
 func (r *PromptRepository) ImportTree(treeData *models.TreeResponse) error {
-	// Start a transaction
 	tx, err := database.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("transaction begin failed: %w", err)
 	}
 	defer tx.Rollback()
 
-	// Clear existing data (in correct order for foreign keys)
+	fmt.Printf("About to update project_settings with: project=%s, mainRequest=%s\n", treeData.Project, treeData.MainRequest)
+	result, err := tx.Exec(`
+		INSERT INTO project_settings (id, project_name, main_request)
+		VALUES (1, $1, $2)
+		ON CONFLICT (id) 
+		DO UPDATE SET 
+			project_name = EXCLUDED.project_name,
+			main_request = EXCLUDED.main_request
+	`, treeData.Project, treeData.MainRequest)
+	if err != nil {
+		fmt.Printf("ERROR updating project_settings: %v\n", err)
+		return fmt.Errorf("update project settings failed: %w", err)
+	}
+	rowsAffected, _ := result.RowsAffected()
+	fmt.Printf("SUCCESS: Updated project_settings: rows affected = %d, project = %s\n", rowsAffected, treeData.Project)
+
 	_, err = tx.Exec("TRUNCATE TABLE notes, nodes, prompts CASCADE")
 	if err != nil {
 		return fmt.Errorf("truncate failed: %w", err)
 	}
 
-	// Insert prompts
 	for _, promptNode := range treeData.Prompts {
-		// Insert prompt
 		var newID int
 		err := tx.QueryRow(`
 			INSERT INTO prompts (title, description, project_name)
@@ -558,7 +527,6 @@ func (r *PromptRepository) ImportTree(treeData *models.TreeResponse) error {
 			return fmt.Errorf("insert prompt failed: %w", err)
 		}
 
-		// Insert nodes for this prompt
 		for _, nodeSummary := range promptNode.Nodes {
 			_, err = tx.Exec(`
 				INSERT INTO nodes (prompt_id, name, action)
@@ -571,10 +539,21 @@ func (r *PromptRepository) ImportTree(treeData *models.TreeResponse) error {
 		}
 	}
 
-	// Commit transaction
 	if err = tx.Commit(); err != nil {
+		fmt.Printf("ERROR committing transaction: %v\n", err)
 		return fmt.Errorf("transaction commit failed: %w", err)
 	}
 
+	fmt.Printf("=== ImportTree SUCCESS: project=%s ===\n", treeData.Project)
 	return nil
+}
+
+func (r *PromptRepository) GetProjectSettings() (string, string, error) {
+	var projectName, mainRequest string
+	query := "SELECT project_name, main_request FROM project_settings WHERE id = 1"
+	err := database.DB.QueryRow(query).Scan(&projectName, &mainRequest)
+	if err != nil {
+		return "", "", fmt.Errorf("query failed: %w", err)
+	}
+	return projectName, mainRequest, nil
 }

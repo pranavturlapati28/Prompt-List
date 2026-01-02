@@ -1,0 +1,24 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '--no-cache', '-t', 'gcr.io/$PROJECT_ID/backend:$BUILD_ID', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/backend:$BUILD_ID']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/backend:$BUILD_ID'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances'
+      - 'merget-takehome:us-central1:prompttree-db'
+      - '--set-env-vars'
+      - 'INSTANCE_CONNECTION_NAME=merget-takehome:us-central1:prompttree-db,DB_USER=promptuser,DB_PASS=promptpass123,DB_NAME=prompttree,ENVIRONMENT=production,API_KEY=b2916b066abf2e7bd78084eadebfd5f4f3ca4b32b9aa9ed4fa0e3799c6f45121'
+
+images:
+  - 'gcr.io/$PROJECT_ID/backend:$BUILD_ID'
+

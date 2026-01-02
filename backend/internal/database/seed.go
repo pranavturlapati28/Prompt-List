@@ -5,9 +5,7 @@ import (
 	"log"
 )
 
-// Seed populates the database with initial data from the JSON
 func Seed() error {
-	// Check if data already exists
 	var count int
 	err := DB.QueryRow("SELECT COUNT(*) FROM prompts").Scan(&count)
 	if err != nil {
@@ -16,7 +14,6 @@ func Seed() error {
 
 	if count > 0 {
 		fmt.Println("Clearing existing data...")
-		// Clear existing data in correct order (respecting foreign keys)
 		_, err = DB.Exec("DELETE FROM notes")
 		if err != nil {
 			log.Printf("Warning: failed to delete notes: %v", err)
@@ -34,8 +31,6 @@ func Seed() error {
 
 	fmt.Println("Seeding database with initial data...")
 
-	// Insert all prompts from the Personal Finance Copilot project
-	// Store the prompt IDs as we insert them
 	prompts := []struct {
 		title       string
 		description string

@@ -2,10 +2,7 @@ package database
 
 import "fmt"
 
-// Migrate creates all required database tables
 func Migrate() error {
-	// Create prompts table
-	// This stores the main prompts like "Project Setup", "3D Environment", etc.
 	_, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS prompts (
 			id SERIAL PRIMARY KEY,
@@ -19,9 +16,6 @@ func Migrate() error {
 	}
 	fmt.Println("✓ Prompts table ready")
 
-	// Create nodes table
-	// This stores the subprompts/steps under each prompt
-	// Foreign key ensures referential integrity with prompts table
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS nodes (
 			id SERIAL PRIMARY KEY,
@@ -35,8 +29,6 @@ func Migrate() error {
 	}
 	fmt.Println("✓ Nodes table ready")
 
-	// Create notes table
-	// This stores user annotations on prompts
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS notes (
 			id SERIAL PRIMARY KEY,
@@ -50,8 +42,6 @@ func Migrate() error {
 	}
 	fmt.Println("✓ Notes table ready")
 
-	// Create saved_trees table
-	// This stores saved prompt tree configurations
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS saved_trees (
 			id SERIAL PRIMARY KEY,
@@ -65,6 +55,28 @@ func Migrate() error {
 		return fmt.Errorf("failed to create saved_trees table: %w", err)
 	}
 	fmt.Println("✓ Saved trees table ready")
+
+	_, err = DB.Exec(`
+		CREATE TABLE IF NOT EXISTS project_settings (
+			id INTEGER PRIMARY KEY DEFAULT 1,
+			project_name VARCHAR(255) NOT NULL DEFAULT 'Personal Finance Copilot',
+			main_request TEXT NOT NULL DEFAULT 'Build a web app that helps users track spending, set goals, and get AI-powered budgeting advice from categorized transactions.',
+			CONSTRAINT single_row CHECK (id = 1)
+		);
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to create project_settings table: %w", err)
+	}
+	
+	_, err = DB.Exec(`
+		INSERT INTO project_settings (id, project_name, main_request)
+		VALUES (1, 'Personal Finance Copilot', 'Build a web app that helps users track spending, set goals, and get AI-powered budgeting advice from categorized transactions.')
+		ON CONFLICT (id) DO NOTHING
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to initialize project_settings: %w", err)
+	}
+	fmt.Println("✓ Project settings table ready")
 
 	return nil
 }
