@@ -42,9 +42,14 @@ function TreeManager({ treeData, onTreeUpdate }) {
   const handleImport = async (treeData) => {
     setLoading(true);
     try {
+      console.log('Importing tree with project:', treeData.project);
       await importTree(treeData);
+      // Wait a moment for backend to process, then refresh tree
+      await new Promise(resolve => setTimeout(resolve, 300));
       if (onTreeUpdate) {
+        console.log('Refreshing tree after import...'); // Debug log
         await onTreeUpdate();
+        console.log('Tree refresh completed');
       }
       alert('Tree imported successfully!');
     } catch (error) {
@@ -89,6 +94,8 @@ function TreeManager({ treeData, onTreeUpdate }) {
     setLoading(true);
     try {
       await loadTree(name);
+      // Wait a moment for backend to process, then refresh tree
+      await new Promise(resolve => setTimeout(resolve, 100));
       if (onTreeUpdate) {
         await onTreeUpdate();
       }

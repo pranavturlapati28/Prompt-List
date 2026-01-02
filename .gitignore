@@ -23,4 +23,7 @@ Thumbs.db
 # Database
 *.db
 
+# Cloud Build configs (contain sensitive API keys and passwords)
+backend/cloudbuild.yaml
+frontend/cloudbuild.yaml
 

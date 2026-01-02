@@ -47,6 +47,14 @@ function TreeView({ prompts, projectName, onSelectPrompt, selectedPromptId, onTr
   const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef(null);
 
+  // Expand all prompts by default when prompts change (e.g., when switching trees)
+  useEffect(() => {
+    if (prompts && prompts.length > 0) {
+      const allPromptIds = new Set(prompts.map(p => p.id));
+      setExpandedIds(allPromptIds);
+    }
+  }, [prompts]);
+
   // Measure container width on mount and resize
   useEffect(() => {
     const updateWidth = () => {
